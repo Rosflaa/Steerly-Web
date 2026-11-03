@@ -39,7 +39,7 @@
     .glass-input {
       background: rgba(15, 23, 42, 0.9);
       border: 1px solid rgba(255, 255, 255, 0.12);
-      font-size: 16px; /* Prevents auto-zoom on mobile */
+      font-size: 16px;
     }
     .glass-input:focus {
       border-color: #00D2FF;
@@ -49,11 +49,12 @@
     .package-card {
       transition: all 0.2s ease;
       cursor: pointer;
+      user-select: none;
     }
     .package-card.active {
       border-color: #00D2FF !important;
-      background: rgba(0, 210, 255, 0.12) !important;
-      box-shadow: 0 0 15px rgba(0, 210, 255, 0.2);
+      background: rgba(0, 210, 255, 0.14) !important;
+      box-shadow: 0 0 16px rgba(0, 210, 255, 0.25);
     }
   </style>
 </head>
@@ -171,7 +172,7 @@
     <div class="text-center space-y-2 mb-6">
       <span class="text-[10px] md:text-xs uppercase tracking-widest text-cyan-400 font-bold">Online Dispatch</span>
       <h2 class="text-2xl md:text-4xl font-extrabold heading-font text-white">Reserve Your Chauffeur</h2>
-      <p class="text-xs md:text-sm text-slate-400">Select your schedule. Steerly provides the verified, professional driver.</p>
+      <p class="text-xs md:text-sm text-slate-400">Tap any package below to calculate your rate automatically.</p>
     </div>
 
     <div class="glass-card rounded-2xl md:rounded-3xl p-4 sm:p-6 md:p-10 shadow-2xl relative">
@@ -223,7 +224,7 @@
           </div>
         </div>
 
-        <!-- Interstate Details (Appears only when an interstate package is chosen) -->
+        <!-- Interstate Details -->
         <div id="interstateFields" class="hidden space-y-3.5 p-4 rounded-2xl bg-blue-950/30 border border-cyan-500/20">
           <div>
             <label class="block text-[11px] uppercase tracking-wider text-cyan-300 font-bold mb-1">Destination City & State *</label>
@@ -234,16 +235,16 @@
               <label class="block text-[11px] text-slate-300 mb-1">Trip Format</label>
               <select id="roundTripSelect" class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
                 <option value="true">Round Trip (Driver stays with vehicle)</option>
-                <option value="false">One-Way (Driver returns to base independently)</option>
+                <option value="false">One-Way (Driver returns independently)</option>
               </select>
             </div>
             <div>
-              <label class="block text-[11px] text-slate-300 mb-1">Trip Duration (Number of Days)</label>
-              <input type="number" id="tripDays" value="1" min="1" max="14" class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm" oninput="updateInterstateDays()">
+              <label class="block text-[11px] text-slate-300 mb-1">Number of Days</label>
+              <input type="number" id="tripDays" value="1" min="1" max="30" class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm" oninput="updateInterstateDays()">
             </div>
           </div>
           <p class="text-[10px] text-slate-400 italic">
-            * Note: For interstate trips, the client covers toll gate fees and driver overnight lodging (or commercial return fare if one-way).
+            * Note: For interstate trips, the client covers road tolls and driver overnight accommodation (or return commercial fare if one-way).
           </p>
         </div>
 
@@ -271,7 +272,7 @@
           </div>
           <div>
             <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Pickup Address *</label>
-            <input type="text" id="pickupAddress" placeholder="e.g. Lekki Phase 1, Ikoyi, Ikeja GRA" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+            <input type="text" id="pickupAddress" placeholder="e.g. 3/5 Ikoyi Crescent, Ikoyi, Lagos" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
           </div>
         </div>
 
@@ -290,7 +291,7 @@
         <!-- Price Display Card -->
         <div class="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex justify-between items-center">
           <div>
-            <span class="text-[11px] text-slate-300 block" id="selectedPackageLabel">Daily Shift (City)</span>
+            <span class="text-xs font-bold text-white block" id="selectedPackageLabel">Daily Shift (City Shift)</span>
             <span class="text-[10px] text-cyan-400">Exclusive of fuel/tolls</span>
           </div>
           <div class="text-2xl font-black text-cyan-400 heading-font" id="displayTotal">₦25,000</div>
@@ -335,11 +336,10 @@
 
   <!-- SCRIPT LOGIC -->
   <script>
-    const SUPABASE_URL = "https://pgxhazbhgrjqfwqdjzon.supabase.co";
-    const SUPABASE_ANON_KEY = "sb_publishable_H3mK3IUUOgHvVxBiIRh3kQ_T7sqKc1d";
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const SUPABASE_URL = "https://vfoqbrfqyjhvtrmwsgmr.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_Rbcl-6H6LU7f_vWTWHLlsw_v_GH2BFb";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Active state
     let activePackageName = "Daily Shift";
     let activeScope = "intra_city";
     let baseRate = 25000;
@@ -358,19 +358,22 @@
       activeScope = scope;
       baseRate = rate;
 
-      // Update active highlight classes
       document.querySelectorAll('.package-card').forEach(c => c.classList.remove('active'));
       const activeCard = document.getElementById(cardsMap[name]);
       if (activeCard) activeCard.classList.add('active');
 
       const interstateFields = document.getElementById('interstateFields');
+      const destInput = document.getElementById('destinationCity');
+      
       if (scope === 'interstate') {
         interstateFields.classList.remove('hidden');
-        const days = parseInt(document.getElementById('tripDays').value || 1);
+        destInput.required = true;
+        const days = Math.max(1, parseInt(document.getElementById('tripDays').value || 1));
         totalCalculatedAmount = baseRate * days;
         document.getElementById('selectedPackageLabel').innerText = `${name} (${days} ${days > 1 ? 'Days' : 'Day'})`;
       } else {
         interstateFields.classList.add('hidden');
+        destInput.required = false;
         totalCalculatedAmount = baseRate;
         document.getElementById('selectedPackageLabel').innerText = `${name} (City Shift)`;
       }
@@ -387,7 +390,6 @@
       }
     }
 
-    // FORM SUBMISSION
     document.getElementById('bookingForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       const submitBtn = document.getElementById('submitBtn');
@@ -415,7 +417,7 @@
       };
 
       try {
-        const { data, error } = await supabase.from('bookings').insert([payload]);
+        const { error } = await supabaseClient.from('bookings').insert([payload]);
         if (error) throw error;
 
         document.getElementById('modalRef').innerText = reference;
