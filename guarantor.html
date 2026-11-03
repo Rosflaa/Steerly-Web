@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>Steerly | Pilot Guarantor & NIN Vetting Portal</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Supabase JS Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cabinet+Grotesk:wght@700;800;900&display=swap" rel="stylesheet">
+  
+  <style>
+    body { 
+      font-family: 'Plus Jakarta Sans', sans-serif; 
+      background-color: #030712; 
+      color: #f8fafc;
+    }
+    .heading-font { font-family: 'Cabinet Grotesk', sans-serif; }
+    .brand-btn-gradient {
+      background: linear-gradient(135deg, #00D2FF 0%, #0066FF 100%);
+      box-shadow: 0 4px 20px rgba(0, 102, 255, 0.4);
+    }
+    .glass-card {
+      background: rgba(10, 20, 38, 0.75);
+      backdrop-filter: blur(14px);
+      border: 1px solid rgba(0, 210, 255, 0.15);
+    }
+    .glass-input {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      font-size: 16px;
+    }
+    .glass-input:focus {
+      border-color: #00D2FF;
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.25);
+    }
+
+    /* PRINT STYLES FOR OFFICIAL PHYSICAL COPY */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+      }
+      .no-print {
+        display: none !important;
+      }
+      .print-only {
+        display: block !important;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#030712] pb-20">
+
+  <!-- NAVIGATION (HIDDEN ON PRINT) -->
+  <nav class="no-print sticky top-0 z-40 glass-card border-b border-white/5 py-3 px-4 md:px-12 flex justify-between items-center">
+    <a href="index.html" class="flex items-center gap-2.5">
+      <img src="logo.png.png" alt="Steerly Logo" class="w-8 h-8 md:w-10 md:h-10 object-contain" onerror="this.onerror=null; this.src='logo.png';">
+      <div>
+        <span class="text-xl md:text-2xl font-black tracking-wider text-white heading-font block leading-none">STEERLY</span>
+        <span class="text-[8px] md:text-[9px] uppercase tracking-widest text-cyan-400 font-semibold block mt-0.5">Guarantor & NIN Vetting Desk</span>
+      </div>
+    </a>
+    <div class="flex items-center gap-3">
+      <a href="drivers.html" class="text-xs md:text-sm text-slate-300 hover:text-white transition">← Pilot Portal</a>
+      <button onclick="window.print()" class="px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-cyan-400 border border-cyan-400/30 transition">
+        🖨️ Print Hardcopy Form
+      </button>
+    </div>
+  </nav>
+
+  <!-- DIGITAL PORTAL SECTION (HIDDEN WHEN PRINTING) -->
+  <main class="no-print max-w-3xl mx-auto px-4 pt-8">
+    
+    <!-- Mode Banner -->
+    <div class="glass-card rounded-2xl p-4 mb-6 border-l-4 border-l-cyan-400 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+      <div>
+        <h1 class="text-base md:text-lg font-bold text-white heading-font">Guarantor NIN Verification (Hybrid Portal)</h1>
+        <p class="text-xs text-slate-300 mt-0.5">
+          <strong>Step 1:</strong> Enter 11-digit NIN and submit online. <br>
+          <strong>Step 2:</strong> Tap <strong>"Print Hardcopy Form"</strong> for physical signatures and passport photograph.
+        </p>
+      </div>
+      <button onclick="window.print()" class="shrink-0 w-full sm:w-auto px-4 py-2.5 rounded-xl bg-cyan-500/20 border border-cyan-400 text-cyan-300 font-bold text-xs hover:bg-cyan-500/30 transition">
+        Download / Print PDF Copy
+      </button>
+    </div>
+
+    <!-- ONLINE GUARANTOR FORM -->
+    <div class="glass-card rounded-2xl md:rounded-3xl p-5 sm:p-8 shadow-2xl relative">
+      <div class="border-b border-white/10 pb-4 mb-6">
+        <span class="text-[10px] uppercase tracking-widest text-cyan-400 font-bold">Mandatory NIN Verification</span>
+        <h2 class="text-xl md:text-2xl font-extrabold text-white heading-font">Digital Guarantor & NIN Record</h2>
+      </div>
+
+      <form id="guarantorForm" class="space-y-5">
+        
+        <!-- Pilot Reference Details -->
+        <div class="p-4 rounded-xl bg-blue-950/30 border border-cyan-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-cyan-300 font-bold mb-1">Applicant Pilot ID *</label>
+            <input type="text" id="driverCode" placeholder="e.g. PLT-4829" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm uppercase font-mono">
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-cyan-300 font-bold mb-1">Applicant Driver's Full Name *</label>
+            <input type="text" id="driverName" placeholder="e.g. Emmanuel Okafor" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+        </div>
+
+        <!-- Guarantor Personal Info -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Guarantor Full Legal Name *</label>
+            <input type="text" id="guarantorName" placeholder="Title & Full Name" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Guarantor Active Phone / WhatsApp *</label>
+            <input type="tel" id="guarantorPhone" placeholder="e.g. 08030000000" inputmode="tel" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Email Address</label>
+            <input type="email" id="guarantorEmail" placeholder="name@email.com" class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Relationship to Driver *</label>
+            <input type="text" id="relationship" placeholder="e.g. Uncle, Former Employer, Clergy" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Years Known *</label>
+            <input type="number" id="yearsKnown" min="1" max="60" placeholder="e.g. 5" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+        </div>
+
+        <!-- Employment & Addresses -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Occupation & Place of Work *</label>
+            <input type="text" id="occupationEmployer" placeholder="e.g. Senior Accountant / Civil Servant" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Office / Business Address *</label>
+            <input type="text" id="workAddress" placeholder="Full street address, City & State" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Residential Home Address *</label>
+          <input type="text" id="homeAddress" placeholder="Full residential house number, street, area & state" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+        </div>
+
+        <!-- NIN Identification (Locked Specifically to NIN) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 p-4 rounded-xl bg-slate-900/80 border border-cyan-500/30">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-cyan-400 font-bold mb-1">Identification Type</label>
+            <input type="text" value="National Identification Number (NIN)" disabled class="w-full glass-input rounded-xl px-3.5 py-3 text-cyan-300 text-xs md:text-sm cursor-not-allowed bg-slate-950">
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-cyan-400 font-bold mb-1">Guarantor's 11-Digit NIN *</label>
+            <input type="text" id="idNumber" placeholder="Enter 11-digit NIN" maxlength="11" minlength="11" pattern="\d{11}" inputmode="numeric" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm font-mono tracking-widest">
+            <span class="text-[10px] text-slate-400 mt-1 block">Required for backend verification check.</span>
+          </div>
+        </div>
+
+        <!-- Legal Undertaking Checkbox -->
+        <label class="flex items-start gap-3 p-4 rounded-xl bg-slate-900/80 border border-white/10 cursor-pointer">
+          <input type="checkbox" required class="mt-1 w-4 h-4 accent-cyan-400">
+          <span class="text-[11px] text-slate-300 leading-relaxed">
+            <strong>LEGAL UNDERTAKING:</strong> I hereby confirm that I know the above-named applicant personally and vouch for their honesty, good character, and professional conduct. I agree to assist Steerly Management in locating or producing the applicant in the event of vehicle abscondment, theft, willful damage, or breach of trust while assigned to a client vehicle.
+          </span>
+        </label>
+
+        <button type="submit" id="submitBtn" class="w-full py-4 rounded-xl brand-btn-gradient text-white font-extrabold text-sm md:text-base tracking-wide transition hover:opacity-95">
+          Submit Guarantor NIN Record
+        </button>
+      </form>
+
+      <!-- Confirmation Modal -->
+      <div id="successModal" class="hidden absolute inset-0 bg-[#030712]/95 backdrop-blur-xl rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col justify-center items-center text-center space-y-4 z-30">
+        <div class="w-14 h-14 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-400 flex items-center justify-center text-2xl font-bold">✓</div>
+        <h3 class="text-xl md:text-2xl font-bold text-white heading-font">Guarantor NIN Logged Successfully!</h3>
+        <p class="text-slate-300 text-xs md:text-sm max-w-md">
+          The 11-digit NIN has been saved to Supabase for verification. Now click <strong>Print / Save Hardcopy</strong> below to print the official sheet for wet signature and passport photograph attachment.
+        </p>
+        <div class="pt-2 flex flex-col sm:flex-row gap-3 w-full max-w-md">
+          <button onclick="window.print()" class="w-full py-3.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-sm transition">
+            🖨️ Print / Save Hardcopy
+          </button>
+          <button id="whatsappBtn" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition">
+            Notify Desk on WhatsApp
+          </button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ========================================================================= -->
+  <!-- PRINTABLE A4 OFFICIAL HARDCOPY FORM (APPEARS WHEN PRINTING / SAVING PDF)  -->
+  <!-- ========================================================================= -->
+  <section class="print-only hidden max-w-4xl mx-auto p-8 bg-white text-black text-xs leading-normal">
+    <div class="flex justify-between items-start border-b-2 border-black pb-4 mb-5">
+      <div>
+        <h1 class="text-2xl font-black tracking-wider uppercase">STEERLY LOGISTICS & CHAUFFEUR SERVICES</h1>
+        <p class="text-xs font-semibold">Executive Private Driver Outsourcing | Vetting & NIN Compliance Unit</p>
+        <p class="text-[11px] text-gray-700">Fleet Desk Support: 09030774886 | Web: steerly-web.vercel.app</p>
+      </div>
+      <div class="w-28 h-32 border-2 border-black flex items-center justify-center text-center p-2 text-[10px] font-bold uppercase">
+        Affix Guarantor's Recent Passport Photograph Here (Stamped/Signed Across)
+      </div>
+    </div>
+
+    <h2 class="text-center text-sm font-bold uppercase underline mb-4">
+      DRIVER GUARANTOR & NIN INDEMNITY UNDERTAKING FORM
+    </h2>
+
+    <p class="mb-4 text-[11px] text-justify">
+      <strong>INSTRUCTIONS:</strong> This form must be completed in the Guarantor's own handwriting, signed, and returned alongside a clear photocopy of the Guarantor's NIN Slip/Card and Work/Business ID.
+    </p>
+
+    <div class="border border-black p-3 mb-4">
+      <h3 class="font-bold uppercase text-xs mb-2 border-b border-gray-400 pb-1">PART A: APPLICANT (PILOT) INFORMATION</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div><strong>Applicant Full Name:</strong> <span id="printDriverName" class="border-b border-dotted border-black inline-block min-w-[200px]"></span></div>
+        <div><strong>Steerly Pilot ID:</strong> <span id="printDriverCode" class="border-b border-dotted border-black inline-block min-w-[140px] font-mono"></span></div>
+      </div>
+    </div>
+
+    <div class="border border-black p-3 mb-4 space-y-2.5">
+      <h3 class="font-bold uppercase text-xs mb-2 border-b border-gray-400 pb-1">PART B: GUARANTOR'S PERSONAL & NIN PARTICULARS</h3>
+      <div><strong>1. Full Legal Name (Surname First):</strong> <span id="printGuarantorName" class="border-b border-dotted border-black inline-block w-3/4"></span></div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><strong>2. Active Phone No:</strong> <span id="printGuarantorPhone" class="border-b border-dotted border-black inline-block w-2/3"></span></div>
+        <div><strong>3. Email Address:</strong> <span id="printGuarantorEmail" class="border-b border-dotted border-black inline-block w-2/3"></span></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><strong>4. Relationship to Applicant:</strong> <span id="printRelationship" class="border-b border-dotted border-black inline-block w-1/2"></span></div>
+        <div><strong>5. Years Known:</strong> <span id="printYearsKnown" class="border-b border-dotted border-black inline-block w-1/2"></span></div>
+      </div>
+      <div><strong>6. Occupation / Employer / Business Name:</strong> <span id="printOccupation" class="border-b border-dotted border-black inline-block w-2/3"></span></div>
+      <div><strong>7. Office / Business Address:</strong> <span id="printWorkAddress" class="border-b border-dotted border-black inline-block w-3/4"></span></div>
+      <div><strong>8. Residential Home Address:</strong> <span id="printHomeAddress" class="border-b border-dotted border-black inline-block w-3/4"></span></div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><strong>9. ID Type:</strong> <span class="border-b border-dotted border-black inline-block w-2/3 font-bold">National NIN</span></div>
+        <div><strong>10. Guarantor 11-Digit NIN:</strong> <span id="printIdNumber" class="border-b border-dotted border-black inline-block w-2/3 font-mono font-bold"></span></div>
+      </div>
+    </div>
+
+    <div class="border border-black p-3 mb-4 text-[11px] text-justify space-y-2">
+      <h3 class="font-bold uppercase text-xs border-b border-gray-400 pb-1">PART C: SOLEMN DECLARATION & INDEMNITY</h3>
+      <p>
+        I, the undersigned, hereby confirm that the applicant named in Part A is personally known to me and is of good character, sound mind, and trustworthy disposition to be deployed as a private chauffeur to Steerly clients.
+      </p>
+      <p>
+        I undertake to unconditionally cooperate with Steerly Management and law enforcement authorities to trace, locate, and produce the applicant in the event of abscondment with a client's vehicle, theft, criminal breach of trust, or verifiable gross misconduct while on assignment.
+      </p>
+      <div class="grid grid-cols-2 gap-6 pt-6">
+        <div>
+          <div class="border-b border-black h-6"></div>
+          <p class="font-bold mt-1">Guarantor's Wet Signature & Date</p>
+        </div>
+        <div>
+          <div class="border-b border-black h-6"></div>
+          <p class="font-bold mt-1">Witness Name, Phone & Signature</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="border border-gray-500 p-2 text-[10px]">
+      <strong>FOR OFFICIAL STEERLY VETTING DESK USE ONLY:</strong>
+      NIN Verified: [ YES / NO ] | Phone Call Confirmed: [ YES / NO ] | Date: _______________ | Status: [ APPROVED / REJECTED ]
+    </div>
+  </section>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    const SUPABASE_URL = "https://vfoqbrfqyjhvtrmwsgmr.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_Rbcl-6H6LU7f_vWTWHLlsw_v_GH2BFb";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('pilot')) document.getElementById('driverCode').value = params.get('pilot');
+      if (params.get('name')) document.getElementById('driverName').value = params.get('name');
+    });
+
+    function syncPrintFields(payload) {
+      document.getElementById('printDriverCode').innerText = payload.driver_code;
+      document.getElementById('printDriverName').innerText = payload.driver_full_name;
+      document.getElementById('printGuarantorName').innerText = payload.guarantor_name;
+      document.getElementById('printGuarantorPhone').innerText = payload.guarantor_phone;
+      document.getElementById('printGuarantorEmail').innerText = payload.guarantor_email || 'N/A';
+      document.getElementById('printRelationship').innerText = payload.relationship;
+      document.getElementById('printYearsKnown').innerText = payload.years_known + ' Years';
+      document.getElementById('printOccupation').innerText = payload.occupation_employer;
+      document.getElementById('printWorkAddress').innerText = payload.work_address;
+      document.getElementById('printHomeAddress').innerText = payload.home_address;
+      document.getElementById('printIdNumber').innerText = payload.id_number;
+    }
+
+    document.getElementById('guarantorForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const ninVal = document.getElementById('idNumber').value.trim();
+      if (ninVal.length !== 11 || isNaN(ninVal)) {
+        alert("Please enter a valid 11-digit NIN for verification.");
+        return;
+      }
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerText = "Saving Guarantor NIN Record...";
+
+      const payload = {
+        driver_code: document.getElementById('driverCode').value.trim().toUpperCase(),
+        driver_full_name: document.getElementById('driverName').value.trim(),
+        guarantor_name: document.getElementById('guarantorName').value.trim(),
+        guarantor_phone: document.getElementById('guarantorPhone').value.trim(),
+        guarantor_email: document.getElementById('guarantorEmail').value.trim(),
+        relationship: document.getElementById('relationship').value.trim(),
+        years_known: parseInt(document.getElementById('yearsKnown').value || 1),
+        occupation_employer: document.getElementById('occupationEmployer').value.trim(),
+        work_address: document.getElementById('workAddress').value.trim(),
+        home_address: document.getElementById('homeAddress').value.trim(),
+        id_type: 'NIN',
+        id_number: ninVal
+      };
+
+      syncPrintFields(payload);
+
+      try {
+        const { error } = await supabaseClient.from('guarantors').insert([payload]);
+        if (error) throw error;
+
+        document.getElementById('successModal').classList.remove('hidden');
+
+        const waText = encodeURIComponent(
+          `Hello Steerly Vetting Desk, I have completed the digital Guarantor NIN Form.\n\n` +
+          `*Pilot ID:* ${payload.driver_code}\n` +
+          `*Applicant Name:* ${payload.driver_full_name}\n` +
+          `*Guarantor Name:* ${payload.guarantor_name}\n` +
+          `*Guarantor Phone:* ${payload.guarantor_phone}\n` +
+          `*Guarantor NIN:* ${payload.id_number}\n` +
+          `*Relationship:* ${payload.relationship} (${payload.years_known} yrs)`
+        );
+
+        document.getElementById('whatsappBtn').onclick = function() {
+          window.open(`https://wa.me/2349030774886?text=${waText}`, '_blank');
+        };
+      } catch (err) {
+        alert("Submission issue: " + err.message);
+        submitBtn.disabled = false;
+        submitBtn.innerText = "Submit Guarantor NIN Record";
+      }
+    });
+  </script>
+</body>
+</html>
