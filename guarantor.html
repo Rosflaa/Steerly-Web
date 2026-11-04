@@ -41,7 +41,7 @@
       box-shadow: 0 0 0 2px rgba(0, 210, 255, 0.25);
     }
 
-    /* PRINT STYLES FOR OFFICIAL PHYSICAL COPY */
+    /* PRINT STYLES WITH WATERMARK */
     @media print {
       body {
         background-color: #ffffff !important;
@@ -53,6 +53,22 @@
       }
       .print-only {
         display: block !important;
+        position: relative;
+      }
+      /* Watermark Styling */
+      .watermark {
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        transform: translate(-50%, -50%) rotate(-35deg);
+        font-size: 38px;
+        font-weight: 900;
+        color: rgba(0, 102, 255, 0.05);
+        white-space: nowrap;
+        pointer-events: none;
+        z-index: 0;
+        text-transform: uppercase;
+        letter-spacing: 4px;
       }
     }
   </style>
@@ -122,7 +138,6 @@
           <div>
             <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Guarantor Phone / WhatsApp (10 or 11 Digits) *</label>
             <input type="tel" id="guarantorPhone" placeholder="e.g. 08030000000 or 8030000000" maxlength="11" minlength="10" inputmode="numeric" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm font-mono">
-            <span class="text-[10px] text-slate-400 mt-1 block">Accepts 11 digits (e.g. 080...) or 10 digits (e.g. 803...).</span>
           </div>
         </div>
 
@@ -204,12 +219,15 @@
   </main>
 
   <!-- ========================================================================= -->
-  <!-- PRINTABLE A4 OFFICIAL HARDCOPY FORM (STEERLY OPERATIONS LIMITED LETTERHEAD) -->
+  <!-- PRINTABLE A4 OFFICIAL HARDCOPY FORM (WITH WATERMARK)                      -->
   <!-- ========================================================================= -->
-  <section class="print-only hidden max-w-4xl mx-auto p-6 bg-white text-black text-xs leading-relaxed font-sans">
+  <section class="print-only hidden max-w-4xl mx-auto p-6 bg-white text-black text-xs leading-relaxed font-sans relative">
     
+    <!-- Watermark Layer -->
+    <div class="watermark">STEERLY OPERATIONS LIMITED</div>
+
     <!-- Letterhead with Colored Logo & Exact Company Name -->
-    <div class="flex justify-between items-center border-b-2 border-blue-900 pb-3 mb-4">
+    <div class="flex justify-between items-center border-b-2 border-blue-900 pb-3 mb-4 relative z-10">
       <div class="flex items-center gap-3">
         <img src="logo.png.png" alt="Steerly Logo" class="w-14 h-14 object-contain" onerror="this.onerror=null; this.src='logo.png';">
         <div>
@@ -223,68 +241,70 @@
       </div>
     </div>
 
-    <h2 class="text-center text-sm font-bold uppercase underline mb-3 text-blue-950">
-      DRIVER GUARANTOR & NIN INDEMNITY UNDERTAKING FORM
-    </h2>
+    <div class="relative z-10">
+      <h2 class="text-center text-sm font-bold uppercase underline mb-3 text-blue-950">
+        DRIVER GUARANTOR & NIN INDEMNITY UNDERTAKING FORM
+      </h2>
 
-    <p class="mb-3 text-[11px] text-justify">
-      <strong>INSTRUCTIONS:</strong> This form must be completed in the Guarantor's own handwriting, signed, and returned alongside a clear photocopy of the Guarantor's NIN Slip/Card and Work/Business ID.
-    </p>
-
-    <!-- Part A -->
-    <div class="border border-black p-2.5 mb-3 rounded">
-      <h3 class="font-bold uppercase text-[11px] mb-2 bg-blue-50 p-1 border-b border-black">PART A: APPLICANT (PILOT) INFORMATION</h3>
-      <div class="grid grid-cols-2 gap-2 text-xs">
-        <div><strong>Applicant Full Name:</strong> <span id="printDriverName" class="border-b border-dotted border-black inline-block min-w-[180px] font-semibold"></span></div>
-        <div><strong>Steerly Pilot ID:</strong> <span id="printDriverCode" class="border-b border-dotted border-black inline-block min-w-[120px] font-mono font-semibold"></span></div>
-      </div>
-    </div>
-
-    <!-- Part B -->
-    <div class="border border-black p-2.5 mb-3 rounded space-y-2 text-xs">
-      <h3 class="font-bold uppercase text-[11px] mb-2 bg-blue-50 p-1 border-b border-black">PART B: GUARANTOR'S PERSONAL & NIN PARTICULARS</h3>
-      <div><strong>1. Full Legal Name (Surname First):</strong> <span id="printGuarantorName" class="border-b border-dotted border-black inline-block w-3/4 font-semibold"></span></div>
-      <div class="grid grid-cols-2 gap-2">
-        <div><strong>2. Active Phone No:</strong> <span id="printGuarantorPhone" class="border-b border-dotted border-black inline-block w-2/3 font-semibold"></span></div>
-        <div><strong>3. Email Address:</strong> <span id="printGuarantorEmail" class="border-b border-dotted border-black inline-block w-2/3 font-semibold"></span></div>
-      </div>
-      <div class="grid grid-cols-2 gap-2">
-        <div><strong>4. Relationship to Applicant:</strong> <span id="printRelationship" class="border-b border-dotted border-black inline-block w-1/2 font-semibold"></span></div>
-        <div><strong>5. Years Known:</strong> <span id="printYearsKnown" class="border-b border-dotted border-black inline-block w-1/2 font-semibold"></span></div>
-      </div>
-      <div><strong>6. Occupation / Employer / Business Name:</strong> <span id="printOccupation" class="border-b border-dotted border-black inline-block w-2/3 font-semibold"></span></div>
-      <div><strong>7. Office / Business Address:</strong> <span id="printWorkAddress" class="border-b border-dotted border-black inline-block w-3/4 font-semibold"></span></div>
-      <div><strong>8. Residential Home Address:</strong> <span id="printHomeAddress" class="border-b border-dotted border-black inline-block w-3/4 font-semibold"></span></div>
-      <div class="grid grid-cols-2 gap-2">
-        <div><strong>9. ID Type:</strong> <span class="border-b border-dotted border-black inline-block w-2/3 font-bold text-blue-900">National NIN</span></div>
-        <div><strong>10. Guarantor 11-Digit NIN:</strong> <span id="printIdNumber" class="border-b border-dotted border-black inline-block w-2/3 font-mono font-bold"></span></div>
-      </div>
-    </div>
-
-    <!-- Part C -->
-    <div class="border border-black p-2.5 mb-3 rounded text-[11px] text-justify space-y-1.5">
-      <h3 class="font-bold uppercase text-[11px] bg-blue-50 p-1 border-b border-black mb-1">PART C: SOLEMN DECLARATION & INDEMNITY</h3>
-      <p>
-        I, the undersigned, hereby confirm that the applicant named in Part A is personally known to me and is of good character, sound mind, and trustworthy disposition to be deployed as a private chauffeur to Steerly Operations Limited clients.
+      <p class="mb-3 text-[11px] text-justify">
+        <strong>INSTRUCTIONS:</strong> This form must be completed in the Guarantor's own handwriting, signed, and returned alongside a clear photocopy of the Guarantor's NIN Slip/Card and Work/Business ID.
       </p>
-      <p>
-        I undertake to unconditionally cooperate with Steerly Operations Limited Management and law enforcement authorities to trace, locate, and produce the applicant in the event of abscondment with a client's vehicle, theft, criminal breach of trust, or verifiable gross misconduct while on assignment.
-      </p>
-      <div class="grid grid-cols-2 gap-6 pt-5">
-        <div>
-          <div class="border-b border-black h-5"></div>
-          <p class="font-bold mt-0.5 text-[10px]">Guarantor's Wet Signature & Date</p>
-        </div>
-        <div>
-          <div class="border-b border-black h-5"></div>
-          <p class="font-bold mt-0.5 text-[10px]">Witness Name, Phone & Signature</p>
+
+      <!-- Part A -->
+      <div class="border border-black p-2.5 mb-3 rounded bg-white/80">
+        <h3 class="font-bold uppercase text-[11px] mb-2 bg-blue-50 p-1 border-b border-black">PART A: APPLICANT (PILOT) INFORMATION</h3>
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div><strong>Applicant Full Name:</strong> <span id="printDriverName" class="border-b border-dotted border-black inline-block min-w-[180px] font-semibold"></span></div>
+          <div><strong>Steerly Pilot ID:</strong> <span id="printDriverCode" class="border-b border-dotted border-black inline-block min-w-[120px] font-mono font-semibold"></span></div>
         </div>
       </div>
-    </div>
 
-    <div class="border border-blue-900 bg-blue-50 p-2 text-[10px] rounded">
-      <strong>FOR OFFICIAL STEERLY OPERATIONS LIMITED VETTING DESK USE ONLY:</strong>
-      NIN Verified: [ YES / NO ] | Phone Call Confirmed: [ YES / NO ] | Date: _______________ | Status: [ APPROVED / REJECTED ]
+      <!-- Part B -->
+      <div class="border border-black p-2.5 mb-3 rounded space-y-2 text-xs bg-white/80">
+        <h3 class="font-bold uppercase text-[11px] mb-2 bg-blue-50 p-1 border-b border-black">PART B: GUARANTOR'S PERSONAL & NIN PARTICULARS</h3>
+        <div><strong>1. Full Legal Name (Surname First):</strong> <span id="printGuarantorName" class="border-b border-dotted border-black inline-block w-3/4 font-semibold"></span></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><strong>2. Active Phone No:</strong> <span id="printGuarantorPhone" class="border-b border-dotted border-black inline-block w-2/3 font-semibold"></span></div>
+          <div><strong>3. Email Address:</strong> <span id="printGuarantorEmail" class="border-b border-dotted border-black inline-block w-2/3 font-semibold"></span></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><strong>4. Relationship to Applicant:</strong> <span id="printRelationship" class="border-b border-dotted border-black inline-block w-1/2 font-semibold"></span></div>
+          <div><strong>5. Years Known:</strong> <span id="printYearsKnown" class="border-b border-dotted border-black inline-block w-1/2 font-semibold"></span></div>
+        </div>
+        <div><strong>6. Occupation / Employer / Business Name:</strong> <span id="printOccupation" class="border-b border-dotted border-black inline-block w-2/3 font-semibold"></span></div>
+        <div><strong>7. Office / Business Address:</strong> <span id="printWorkAddress" class="border-b border-dotted border-black inline-block w-3/4 font-semibold"></span></div>
+        <div><strong>8. Residential Home Address:</strong> <span id="printHomeAddress" class="border-b border-dotted border-black inline-block w-3/4 font-semibold"></span></div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><strong>9. ID Type:</strong> <span class="border-b border-dotted border-black inline-block w-2/3 font-bold text-blue-900">National NIN</span></div>
+          <div><strong>10. Guarantor 11-Digit NIN:</strong> <span id="printIdNumber" class="border-b border-dotted border-black inline-block w-2/3 font-mono font-bold"></span></div>
+        </div>
+      </div>
+
+      <!-- Part C -->
+      <div class="border border-black p-2.5 mb-3 rounded text-[11px] text-justify space-y-1.5 bg-white/80">
+        <h3 class="font-bold uppercase text-[11px] bg-blue-50 p-1 border-b border-black mb-1">PART C: SOLEMN DECLARATION & INDEMNITY</h3>
+        <p>
+          I, the undersigned, hereby confirm that the applicant named in Part A is personally known to me and is of good character, sound mind, and trustworthy disposition to be deployed as a private chauffeur to Steerly Operations Limited clients.
+        </p>
+        <p>
+          I undertake to unconditionally cooperate with Steerly Operations Limited Management and law enforcement authorities to trace, locate, and produce the applicant in the event of abscondment with a client's vehicle, theft, criminal breach of trust, or verifiable gross misconduct while on assignment.
+        </p>
+        <div class="grid grid-cols-2 gap-6 pt-5">
+          <div>
+            <div class="border-b border-black h-5"></div>
+            <p class="font-bold mt-0.5 text-[10px]">Guarantor's Wet Signature & Date</p>
+          </div>
+          <div>
+            <div class="border-b border-black h-5"></div>
+            <p class="font-bold mt-0.5 text-[10px]">Witness Name, Phone & Signature</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="border border-blue-900 bg-blue-50 p-2 text-[10px] rounded">
+        <strong>FOR OFFICIAL STEERLY OPERATIONS LIMITED VETTING DESK USE ONLY:</strong>
+        NIN Verified: [ YES / NO ] | Phone Call Confirmed: [ YES / NO ] | Date: _______________ | Status: [ APPROVED / REJECTED ]
+      </div>
     </div>
   </section>
 
