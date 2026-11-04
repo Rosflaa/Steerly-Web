@@ -209,15 +209,15 @@
         <div class="w-14 h-14 md:w-16 md:h-16 rounded-full bg-cyan-500/20 border border-cyan-400 text-cyan-400 flex items-center justify-center text-2xl md:text-3xl font-bold">✓</div>
         <h3 class="text-xl md:text-2xl font-bold text-white heading-font">Application Logged!</h3>
         <p class="text-slate-300 text-xs md:text-sm max-w-md">
-          Pilot ID: <strong id="modalDriverCode" class="text-cyan-400 font-mono">PLT-0000</strong>. Tap the button below to message the Steerly Fleet Desk on WhatsApp to schedule your verification.
+          Pilot ID: <strong id="modalDriverCode" class="text-cyan-400 font-mono">PLT-0000</strong>. Tap the button below to open your guarantor NIN form or message the desk on WhatsApp.
         </p>
-        <div class="pt-2 flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+        <div class="pt-2 flex flex-col gap-2.5 w-full max-w-sm">
+          <a id="guarantorLinkBtn" href="guarantor.html" class="w-full py-3.5 rounded-xl bg-cyan-500/20 border border-cyan-400 text-cyan-300 hover:bg-cyan-500/30 font-bold text-sm transition text-center">
+            📋 Open Guarantor NIN Form
+          </a>
           <button id="whatsappBtn" class="w-full py-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-sm transition flex items-center justify-center gap-2 active:scale-95">
             <span>Verify on WhatsApp</span>
           </button>
-          <a href="index.html" class="w-full py-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-sm transition text-center">
-            Return Home
-          </a>
         </div>
       </div>
 
@@ -266,6 +266,7 @@
         if (error) throw error;
 
         document.getElementById('modalDriverCode').innerText = driverCode;
+        document.getElementById('guarantorLinkBtn').href = `guarantor.html?pilot=${driverCode}&name=${encodeURIComponent(payload.full_name)}`;
         document.getElementById('successModal').classList.remove('hidden');
 
         const waText = encodeURIComponent(
