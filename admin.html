@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
-  <title>Steerly Operations Limited | Financial Dispatch & Audit Desk</title>
+  <title>Steerly Operations Limited | Secure Admin Dispatch Desk</title>
   
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -40,17 +40,39 @@
 </head>
 <body class="min-h-screen bg-[#030712] pb-24">
 
-  <!-- PASSWORD GATE MODAL -->
+  <!-- SECURE TOKEN AUTH MODAL -->
   <div id="authModal" class="fixed inset-0 z-50 bg-[#030712] flex items-center justify-center p-4">
     <div class="glass-card rounded-3xl p-8 max-w-md w-full text-center space-y-4 shadow-2xl border border-cyan-500/30">
-      <div class="w-12 h-12 rounded-full bg-cyan-500/20 text-cyan-400 mx-auto flex items-center justify-center font-bold text-xl">🔒</div>
-      <h2 class="text-xl font-bold text-white heading-font">Steerly Admin Restricted Area</h2>
-      <p class="text-xs text-slate-400">Enter your internal dispatch passcode to access financial revenue and pilot vetting records.</p>
-      <input type="password" id="passcode" placeholder="Enter passcode" class="w-full glass-input rounded-xl px-4 py-3 text-white text-center tracking-widest">
-      <button onclick="verifyPasscode()" class="w-full py-3 rounded-xl bg-cyan-500 text-black font-bold text-sm hover:bg-cyan-400 transition">
-        Access Dispatch Desk
-      </button>
-      <p id="errorMsg" class="text-red-400 text-xs hidden">Incorrect passcode. Try again.</p>
+      <div class="w-12 h-12 rounded-full bg-cyan-500/20 text-cyan-400 mx-auto flex items-center justify-center font-bold text-xl">🛡️</div>
+      <h2 class="text-xl font-bold text-white heading-font">Steerly Secure Access</h2>
+      <p id="authInstruction" class="text-xs text-slate-400">Enter your authorized admin email to receive a unique 6-digit login token.</p>
+      
+      <!-- Step 1: Request Token -->
+      <div id="step1" class="space-y-3">
+        <input type="email" id="adminEmail" placeholder="admin@steerly.com" value="operations@steerly.com" class="w-full glass-input rounded-xl px-4 py-3 text-white text-center">
+        <button onclick="requestToken()" id="requestBtn" class="w-full py-3 rounded-xl bg-cyan-500 text-black font-bold text-sm hover:bg-cyan-400 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          Generate & Send Token
+        </button>
+      </div>
+
+      <!-- Step 2: Enter Token -->
+      <div id="step2" class="space-y-3 hidden">
+        <input type="text" id="tokenInput" placeholder="Enter 6-digit token" maxlength="6" inputmode="numeric" class="w-full glass-input rounded-xl px-4 py-3 text-white text-center tracking-widest font-mono text-lg">
+        <button onclick="verifyToken()" id="verifyBtn" class="w-full py-3 rounded-xl bg-emerald-500 text-black font-bold text-sm hover:bg-emerald-400 transition">
+          Verify Token & Enter Desk
+        </button>
+        
+        <div class="flex justify-between items-center pt-2 text-xs">
+          <button onclick="resetAuth()" class="text-slate-400 underline hover:text-white transition">
+            ← Change Email
+          </button>
+          <button onclick="requestToken()" id="regenBtn" class="text-cyan-400 font-bold hover:underline transition disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed">
+            🔄 Regenerate Token (60s)
+          </button>
+        </div>
+      </div>
+
+      <p id="errorMsg" class="text-red-400 text-xs hidden"></p>
     </div>
   </div>
 
@@ -199,22 +221,130 @@
 
   </main>
 
-  <!-- ADMIN SCRIPT -->
+  <!-- SECURE TOKEN AUTH & ADMIN SCRIPT -->
   <script>
     const SUPABASE_URL = "https://vfoqbrfqyjhvtrmwsgmr.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_Rbcl-6H6LU7f_vWTWHLlsw_v_GH2BFb";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     let globalBookingsData = [];
+    let activeEmail = "";
+    let cooldownTimer = null;
+    let timeLeft = 60;
 
-    function verifyPasscode() {
-      const code = document.getElementById('passcode').value.trim();
-      if (code === "Steerly2026!") {
-        document.getElementById('authModal').classList.add('hidden');
-        loadAllData();
-      } else {
-        document.getElementById('errorMsg').classList.remove('hidden');
+    function startCooldown() {
+      timeLeft = 60;
+      const reqBtn = document.getElementById('requestBtn');
+      const regenBtn = document.getElementById('regenBtn');
+      
+      reqBtn.disabled = true;
+      regenBtn.disabled = true;
+
+      if (cooldownTimer) clearInterval(cooldownTimer);
+
+      cooldownTimer = setInterval(() => {
+        timeLeft--;
+        regenBtn.innerText = `🔄 Regenerate Token (${timeLeft}s)`;
+        reqBtn.innerText = `Wait ${timeLeft}s before requesting`;
+
+        if (timeLeft <= 0) {
+          clearInterval(cooldownTimer);
+          reqBtn.disabled = false;
+          reqBtn.innerText = "Generate & Send Token";
+          regenBtn.disabled = false;
+          regenBtn.innerText = "🔄 Regenerate Token";
+        }
+      }, 1000);
+    }
+
+    async function requestToken() {
+      const email = document.getElementById('adminEmail').value.trim();
+      if (!email) {
+        showError("Please enter a valid admin email.");
+        return;
       }
+      activeEmail = email;
+
+      const newToken = Math.floor(100000 + Math.random() * 900000).toString();
+
+      try {
+        const { error } = await supabaseClient.from('admin_tokens').insert([{ email: activeEmail, token: newToken, used: false }]);
+        if (error) throw error;
+
+        const waText = encodeURIComponent(
+          `🔐 *Steerly Operations Security Token*\n\n` +
+          `Your one-time login token is: *${newToken}*\n` +
+          `Valid for this login session only.`
+        );
+
+        window.open(`https://wa.me/2349030774886?text=${waText}`, '_blank');
+
+        document.getElementById('step1').classList.add('hidden');
+        document.getElementById('step2').classList.remove('hidden');
+        document.getElementById('authInstruction').innerText = `Fresh token generated! Check your WhatsApp for the 6-digit code sent for ${activeEmail}.`;
+        document.getElementById('errorMsg').classList.add('hidden');
+
+        // Start 60s cooldown
+        startCooldown();
+      } catch (err) {
+        showError("Error generating token: " + err.message);
+      }
+    }
+
+    async function verifyToken() {
+      const enteredToken = document.getElementById('tokenInput').value.trim();
+      if (enteredToken.length !== 6) {
+        showError("Please enter the complete 6-digit token.");
+        return;
+      }
+
+      const verifyBtn = document.getElementById('verifyBtn');
+      verifyBtn.disabled = true;
+      verifyBtn.innerText = "Verifying...";
+
+      try {
+        const { data, error } = await supabaseClient
+          .from('admin_tokens')
+          .select('*')
+          .eq('email', activeEmail)
+          .eq('token', enteredToken)
+          .eq('used', false)
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          await supabaseClient.from('admin_tokens').update({ used: true }).eq('id', data[0].id);
+
+          document.getElementById('authModal').classList.add('hidden');
+          loadAllData();
+        } else {
+          showError("Invalid or expired token. Please generate a new one.");
+          verifyBtn.disabled = false;
+          verifyBtn.innerText = "Verify Token & Enter Desk";
+        }
+      } catch (err) {
+        showError("Verification failed: " + err.message);
+        verifyBtn.disabled = false;
+        verifyBtn.innerText = "Verify Token & Enter Desk";
+      }
+    }
+
+    function resetAuth() {
+      if (cooldownTimer) clearInterval(cooldownTimer);
+      document.getElementById('step2').classList.add('hidden');
+      document.getElementById('step1').classList.remove('hidden');
+      document.getElementById('authInstruction').innerText = "Enter your authorized admin email to receive a unique 6-digit login token.";
+      document.getElementById('requestBtn').disabled = false;
+      document.getElementById('requestBtn').innerText = "Generate & Send Token";
+      document.getElementById('errorMsg').classList.add('hidden');
+    }
+
+    function showError(msg) {
+      const err = document.getElementById('errorMsg');
+      err.innerText = msg;
+      err.classList.remove('hidden');
     }
 
     function switchTab(tabName) {
@@ -226,7 +356,6 @@
       document.getElementById(`tabBtn-${tabName}`).className = "px-4 py-2 rounded-xl text-xs font-bold bg-cyan-500 text-black transition";
     }
 
-    // Financial Calculation Helper
     function calculateFinancials(packageType) {
       let pkg = (packageType || '').toLowerCase();
       if (pkg.includes('weekend')) {
@@ -236,21 +365,16 @@
       } else if (pkg.includes('interstate') || pkg.includes('south-west') || pkg.includes('far north')) {
         return { gross: 150000, driver: 110000, cut: 40000 };
       } else {
-        // Default Daily In-City
         return { gross: 25000, driver: 18000, cut: 7000 };
       }
     }
 
     async function loadAllData() {
       try {
-        // Fetch Bookings
         const { data: bookings } = await supabaseClient.from('bookings').select('*').order('created_at', { ascending: false });
         globalBookingsData = bookings || [];
         
-        let totalRev = 0;
-        let totalCom = 0;
-        let totalDrv = 0;
-
+        let totalRev = 0, totalCom = 0, totalDrv = 0;
         globalBookingsData.forEach(b => {
           let fin = calculateFinancials(b.package_type);
           totalRev += fin.gross;
@@ -263,88 +387,71 @@
         document.getElementById('statDriverPay').innerText = `₦${totalDrv.toLocaleString()}`;
         document.getElementById('statBookingsCount').innerText = `${globalBookingsData.length} Trips`;
 
-        // Render Financials Table
+        // Render Financials
         const fBody = document.getElementById('financialsTableBody');
-        if (globalBookingsData.length > 0) {
-          fBody.innerHTML = globalBookingsData.map(b => {
-            let fin = calculateFinancials(b.package_type);
-            return `
-              <tr class="hover:bg-white/5">
-                <td class="p-3.5 font-bold text-white">${b.full_name}</td>
-                <td class="p-3.5">${b.package_type}</td>
-                <td class="p-3.5 font-mono font-bold text-white">₦${fin.gross.toLocaleString()}</td>
-                <td class="p-3.5 font-mono text-amber-300">₦${fin.driver.toLocaleString()}</td>
-                <td class="p-3.5 font-mono text-emerald-400 font-bold">₦${fin.cut.toLocaleString()}</td>
-                <td class="p-3.5">${b.pickup_date}</td>
-                <td class="p-3.5"><span class="px-2 py-1 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px]">Active</span></td>
-              </tr>
-            `;
-          }).join('');
-        } else {
-          fBody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-slate-500">No bookings recorded yet.</td></tr>`;
-        }
-
-        // Render Bookings Table
-        const bBody = document.getElementById('bookingsTableBody');
-        if (globalBookingsData.length > 0) {
-          bBody.innerHTML = globalBookingsData.map(b => `
+        fBody.innerHTML = globalBookingsData.length > 0 ? globalBookingsData.map(b => {
+          let fin = calculateFinancials(b.package_type);
+          return `
             <tr class="hover:bg-white/5">
               <td class="p-3.5 font-bold text-white">${b.full_name}</td>
-              <td class="p-3.5"><a href="https://wa.me/234${b.phone.replace(/^0/, '')}" target="_blank" class="text-cyan-400 underline">${b.phone}</a></td>
               <td class="p-3.5">${b.package_type}</td>
-              <td class="p-3.5">${b.car_make_model} (${b.transmission})</td>
+              <td class="p-3.5 font-mono font-bold text-white">₦${fin.gross.toLocaleString()}</td>
+              <td class="p-3.5 font-mono text-amber-300">₦${fin.driver.toLocaleString()}</td>
+              <td class="p-3.5 font-mono text-emerald-400 font-bold">₦${fin.cut.toLocaleString()}</td>
               <td class="p-3.5">${b.pickup_date}</td>
-              <td class="p-3.5"><span class="px-2 py-1 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px]">Pending</span></td>
+              <td class="p-3.5"><span class="px-2 py-1 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px]">Active</span></td>
             </tr>
-          `).join('');
-        } else {
-          bBody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">No client bookings found yet.</td></tr>`;
-        }
+          `;
+        }).join('') : `<tr><td colspan="7" class="p-6 text-center text-slate-500">No bookings recorded yet.</td></tr>`;
+
+        // Render Bookings
+        const bBody = document.getElementById('bookingsTableBody');
+        bBody.innerHTML = globalBookingsData.length > 0 ? globalBookingsData.map(b => `
+          <tr class="hover:bg-white/5">
+            <td class="p-3.5 font-bold text-white">${b.full_name}</td>
+            <td class="p-3.5"><a href="https://wa.me/234${b.phone.replace(/^0/, '')}" target="_blank" class="text-cyan-400 underline">${b.phone}</a></td>
+            <td class="p-3.5">${b.package_type}</td>
+            <td class="p-3.5">${b.car_make_model} (${b.transmission})</td>
+            <td class="p-3.5">${b.pickup_date}</td>
+            <td class="p-3.5"><span class="px-2 py-1 rounded bg-amber-500/20 text-amber-300 font-bold text-[10px]">Pending</span></td>
+          </tr>
+        `).join('') : `<tr><td colspan="6" class="p-6 text-center text-slate-500">No client bookings found yet.</td></tr>`;
 
         // Fetch Drivers
         const { data: drivers } = await supabaseClient.from('drivers').select('*').order('created_at', { ascending: false });
         const dBody = document.getElementById('driversTableBody');
-        if (drivers && drivers.length > 0) {
-          dBody.innerHTML = drivers.map(d => `
-            <tr class="hover:bg-white/5">
-              <td class="p-3.5 font-mono font-bold text-cyan-400">${d.driver_code}</td>
-              <td class="p-3.5 font-bold text-white">${d.full_name}</td>
-              <td class="p-3.5"><a href="https://wa.me/234${d.phone.replace(/^0/, '')}" target="_blank" class="text-cyan-400 underline">${d.phone}</a></td>
-              <td class="p-3.5">${d.years_experience} yrs (${d.transmission_skill})</td>
-              <td class="p-3.5 font-mono">${d.license_number}</td>
-              <td class="p-3.5">
-                <a href="guarantor.html?pilot=${d.driver_code}&name=${encodeURIComponent(d.full_name)}" target="_blank" class="px-2 py-1 rounded bg-cyan-500/20 text-cyan-300 font-bold text-[10px] border border-cyan-400/30">Copy Link</a>
-              </td>
-            </tr>
-          `).join('');
-        } else {
-          dBody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">No pilot applications found yet.</td></tr>`;
-        }
+        dBody.innerHTML = drivers && drivers.length > 0 ? drivers.map(d => `
+          <tr class="hover:bg-white/5">
+            <td class="p-3.5 font-mono font-bold text-cyan-400">${d.driver_code}</td>
+            <td class="p-3.5 font-bold text-white">${d.full_name}</td>
+            <td class="p-3.5"><a href="https://wa.me/234${d.phone.replace(/^0/, '')}" target="_blank" class="text-cyan-400 underline">${d.phone}</a></td>
+            <td class="p-3.5">${d.years_experience} yrs (${d.transmission_skill})</td>
+            <td class="p-3.5 font-mono">${d.license_number}</td>
+            <td class="p-3.5">
+              <a href="guarantor.html?pilot=${d.driver_code}&name=${encodeURIComponent(d.full_name)}" target="_blank" class="px-2 py-1 rounded bg-cyan-500/20 text-cyan-300 font-bold text-[10px] border border-cyan-400/30">Copy Link</a>
+            </td>
+          </tr>
+        `).join('') : `<tr><td colspan="6" class="p-6 text-center text-slate-500">No pilot applications found yet.</td></tr>`;
 
         // Fetch Guarantors
         const { data: guarantors } = await supabaseClient.from('guarantors').select('*').order('created_at', { ascending: false });
         const gBody = document.getElementById('guarantorsTableBody');
-        if (guarantors && guarantors.length > 0) {
-          gBody.innerHTML = guarantors.map(g => `
-            <tr class="hover:bg-white/5">
-              <td class="p-3.5 font-mono font-bold text-cyan-400">${g.driver_code}</td>
-              <td class="p-3.5 font-bold text-white">${g.guarantor_name}</td>
-              <td class="p-3.5"><a href="https://wa.me/234${g.guarantor_phone.replace(/^0/, '')}" target="_blank" class="text-cyan-400 underline">${g.guarantor_phone}</a></td>
-              <td class="p-3.5">${g.relationship} (${g.years_known} yrs)</td>
-              <td class="p-3.5 font-mono font-bold text-amber-300">${g.id_number}</td>
-              <td class="p-3.5">${g.occupation_employer}<br><span class="text-[10px] text-slate-400">${g.work_address}</span></td>
-            </tr>
-          `).join('');
-        } else {
-          gBody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">No guarantor records submitted yet.</td></tr>`;
-        }
+        gBody.innerHTML = guarantors && guarantors.length > 0 ? guarantors.map(g => `
+          <tr class="hover:bg-white/5">
+            <td class="p-3.5 font-mono font-bold text-cyan-400">${g.driver_code}</td>
+            <td class="p-3.5 font-bold text-white">${g.guarantor_name}</td>
+            <td class="p-3.5"><a href="https://wa.me/234${g.guarantor_phone.replace(/^0/, '')}" target="_blank" class="text-cyan-400 underline">${g.guarantor_phone}</a></td>
+            <td class="p-3.5">${g.relationship} (${g.years_known} yrs)</td>
+            <td class="p-3.5 font-mono font-bold text-amber-300">${g.id_number}</td>
+            <td class="p-3.5">${g.occupation_employer}<br><span class="text-[10px] text-slate-400">${g.work_address}</span></td>
+          </tr>
+        `).join('') : `<tr><td colspan="6" class="p-6 text-center text-slate-500">No guarantor records submitted yet.</td></tr>`;
 
       } catch (err) {
         console.error("Error loading admin data:", err);
       }
     }
 
-    // EXPORT TO CSV FUNCTION FOR AUDIT
     function exportFinancialCSV() {
       if (!globalBookingsData || globalBookingsData.length === 0) {
         alert("No booking data available to export.");
