@@ -328,7 +328,7 @@
   </footer>
 
   <!-- RESTORED JAVASCRIPT FOR PACKAGE SELECTION & SUPABASE -->
-  <script>
+ <script>
     const SUPABASE_URL = "https://vfoqbrfqyjhvtrmwsgmr.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_Rbcl-6H6LU7f_vWTWHLlsw_v_GH2BFb";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -401,28 +401,48 @@
       const pickupDatetime = document.getElementById('pickupDatetime').value;
       const pickupAddress = document.getElementById('pickupAddress').value.trim();
 
-      let packageSummary = `${currentPackage} (₦${totalAmount.toLocaleString()})`;
+      // Generate a unique booking reference like STR-4169
+      const bookingRef = 'STR-' + Math.floor(1000 + Math.random() * 9000);
+
+      // Collect interstate details if applicable
+      let destCity = null;
+      let isRoundTrip = false;
+      let overnightDays = 0;
+
       if (currentCategory === 'interstate') {
-        const dest = document.getElementById('destinationCity').value.trim();
-        const days = document.getElementById('tripDays').value;
-        const isRound = document.getElementById('roundTripSelect').value === "true" ? "Round Trip" : "One-Way";
-        packageSummary = `${currentPackage} - ${days} Day(s), ${isRound} to ${dest} (₦${totalAmount.toLocaleString()})`;
+        destCity = document.getElementById('destinationCity').value.trim();
+        isRoundTrip = document.getElementById('roundTripSelect').value === "true";
+        overnightDays = parseInt(document.getElementById('tripDays').value) || 1;
       }
 
       try {
         const { error } = await supabaseClient.from('bookings').insert([{
+          booking_reference: bookingRef,
           customer_name: fullName,
-          phone: phone,
-          package_type: packageSummary,
-          car_make_model: carModel,
+          customer_phone: phone,
+          package_tier: currentPackage,
+          trip_scope: currentCategory,
+          destination_city: destCity,
+          is_round_trip: isRoundTrip,
+          overnight_days: overnightDays,
           transmission: transmission,
-          pickup_date: `${pickupDatetime} | ${pickupAddress}`
+          car_make_model: carModel,
+          pickup_address: pickupAddress,
+          pickup_datetime: pickupDatetime ? new Date(pickupDatetime).toISOString() : null,
+          total_amount_ngn: totalAmount,
+          status: 'unassigned'
         }]);
 
         if (error) throw error;
 
+        // Build WhatsApp notification string
+        let packageSummary = `${currentPackage} (₦${totalAmount.toLocaleString()})`;
+        if (currentCategory === 'interstate') {
+          packageSummary = `${currentPackage} - ${overnightDays} Day(s) to ${destCity} (₦${totalAmount.toLocaleString()})`;
+        }
+
         const waText = encodeURIComponent(
-          `🚗 *New Steerly Pilot Reservation*\n\n` +
+          `🚗 *New Steerly Pilot Reservation* (${bookingRef})\n\n` +
           `*Client:* ${fullName}\n` +
           `*Phone:* ${phone}\n` +
           `*Package:* ${packageSummary}\n` +
