@@ -273,4 +273,182 @@
           </div>
           <div>
             <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Pickup Address *</label>
-            <input type="text" id="pickupAddress" placeholder="e.g. 3/5 Ikoyi Crescent, Ikoyi, Lagos" required class
+            <input type="text" id="pickupAddress" placeholder="e.g. 3/5 Ikoyi Crescent, Ikoyi, Lagos" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+        </div>
+
+        <!-- Client Contact -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Your Full Name *</label>
+            <input type="text" id="customerName" placeholder="e.g. Babatunde Adeleke" autocomplete="name" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+          <div>
+            <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">WhatsApp / Phone *</label>
+            <input type="tel" id="customerPhone" placeholder="09030774886" inputmode="tel" autocomplete="tel" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+          </div>
+        </div>
+
+        <!-- Price Display Card -->
+        <div class="p-3.5 rounded-2xl bg-cyan-500/10 border border-cyan-400/30 flex justify-between items-center">
+          <div>
+            <span class="text-xs font-bold text-white block" id="selectedPackageLabel">Daily Shift (City Shift)</span>
+            <span class="text-[10px] text-cyan-400">Exclusive of fuel/tolls</span>
+          </div>
+          <div class="text-2xl font-black text-cyan-400 heading-font" id="displayTotal">₦25,000</div>
+        </div>
+
+        <button type="submit" id="submitBtn" class="w-full py-4 rounded-xl brand-btn-gradient text-white font-extrabold text-sm md:text-base tracking-wide transition hover:opacity-95 active:scale-[0.99] flex items-center justify-center gap-2 shadow-lg shadow-cyan-900/40">
+          <span>Confirm & Reserve Pilot</span>
+        </button>
+      </form>
+
+      <!-- Confirmation Screen (Restored) -->
+      <div id="successModal" class="hidden absolute inset-0 bg-[#030712]/95 backdrop-blur-xl rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col justify-center items-center text-center space-y-4 z-30">
+        <div class="w-14 h-14 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-400 text-2xl font-bold">
+          ✓
+        </div>
+        <h3 class="text-xl md:text-2xl font-extrabold text-white heading-font">Reservation Logged!</h3>
+        <p class="text-xs md:text-sm text-slate-300 max-w-md">
+          Your pilot request has been saved to Steerly Dispatch. Click below to send your instant dispatch ticket via WhatsApp.
+        </p>
+        <a id="whatsappRedirectBtn" href="#" target="_blank" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-emerald-500 text-black font-extrabold text-xs md:text-sm hover:bg-emerald-400 transition">
+          Open WhatsApp Dispatch →
+        </a>
+        <button onclick="resetBookingForm()" class="text-xs text-slate-400 underline hover:text-white pt-2">
+          Book Another Pilot
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/10 mt-12 py-8 px-4 text-center text-xs text-slate-500">
+    <p>© 2026 Steerly Operations Limited. All Rights Reserved.</p>
+  </footer>
+
+  <!-- RESTORED JAVASCRIPT FOR PACKAGE SELECTION & SUPABASE -->
+  <script>
+    const SUPABASE_URL = "https://vfoqbrfqyjhvtrmwsgmr.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_Rbcl-6H6LU7f_vWTWHLlsw_v_GH2BFb";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    let currentPackage = "Daily Shift";
+    let baseRate = 25000;
+    let currentCategory = "intra_city";
+    let totalAmount = 25000;
+
+    function selectPackage(pkgName, rate, category) {
+      currentPackage = pkgName;
+      baseRate = rate;
+      currentCategory = category;
+
+      // Update active card styling
+      document.querySelectorAll('.package-card').forEach(card => {
+        card.classList.remove('active');
+      });
+
+      const cardMap = {
+        'Daily Shift': 'pkg-daily',
+        'Weekend Package': 'pkg-weekend',
+        'Weekly Retainer': 'pkg-weekly',
+        'South-West Interstate': 'pkg-sw',
+        'Far Interstate': 'pkg-far'
+      };
+      const activeId = cardMap[pkgName];
+      if (activeId && document.getElementById(activeId)) {
+        document.getElementById(activeId).classList.add('active');
+      }
+
+      // Show or hide interstate fields
+      const interstateBox = document.getElementById('interstateFields');
+      const destInput = document.getElementById('destinationCity');
+      if (category === 'interstate') {
+        interstateBox.classList.remove('hidden');
+        destInput.required = true;
+        updateInterstateDays();
+      } else {
+        interstateBox.classList.add('hidden');
+        destInput.required = false;
+        totalAmount = baseRate;
+        document.getElementById('selectedPackageLabel').innerText = `${pkgName} (City Shift)`;
+        document.getElementById('displayTotal').innerText = `₦${totalAmount.toLocaleString()}`;
+      }
+    }
+
+    function updateInterstateDays() {
+      if (currentCategory !== 'interstate') return;
+      const daysInput = document.getElementById('tripDays');
+      let days = parseInt(daysInput.value) || 1;
+      if (days < 1) days = 1;
+
+      totalAmount = baseRate * days;
+      document.getElementById('selectedPackageLabel').innerText = `${currentPackage} (${days} Day${days > 1 ? 's' : ''})`;
+      document.getElementById('displayTotal').innerText = `₦${totalAmount.toLocaleString()}`;
+    }
+
+    document.getElementById('bookingForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = `<span>Processing Dispatch...</span>`;
+
+      const fullName = document.getElementById('customerName').value.trim();
+      const phone = document.getElementById('customerPhone').value.trim();
+      const carModel = document.getElementById('carModel').value.trim();
+      const transmission = document.getElementById('transmission').value;
+      const pickupDatetime = document.getElementById('pickupDatetime').value;
+      const pickupAddress = document.getElementById('pickupAddress').value.trim();
+
+      let packageSummary = `${currentPackage} (₦${totalAmount.toLocaleString()})`;
+      if (currentCategory === 'interstate') {
+        const dest = document.getElementById('destinationCity').value.trim();
+        const days = document.getElementById('tripDays').value;
+        const isRound = document.getElementById('roundTripSelect').value === "true" ? "Round Trip" : "One-Way";
+        packageSummary = `${currentPackage} - ${days} Day(s), ${isRound} to ${dest} (₦${totalAmount.toLocaleString()})`;
+      }
+
+      try {
+        const { error } = await supabaseClient.from('bookings').insert([{
+          full_name: fullName,
+          phone: phone,
+          package_type: packageSummary,
+          car_make_model: carModel,
+          transmission: transmission,
+          pickup_date: `${pickupDatetime} | ${pickupAddress}`
+        }]);
+
+        if (error) throw error;
+
+        const waText = encodeURIComponent(
+          `🚗 *New Steerly Pilot Reservation*\n\n` +
+          `*Client:* ${fullName}\n` +
+          `*Phone:* ${phone}\n` +
+          `*Package:* ${packageSummary}\n` +
+          `*Car:* ${carModel} (${transmission})\n` +
+          `*Pickup:* ${pickupDatetime}\n` +
+          `*Address:* ${pickupAddress}`
+        );
+
+        const waUrl = `https://wa.me/2349030774886?text=${waText}`;
+        document.getElementById('whatsappRedirectBtn').href = waUrl;
+        document.getElementById('successModal').classList.remove('hidden');
+        window.open(waUrl, '_blank');
+
+      } catch (err) {
+        alert("Booking Error: " + err.message);
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = `<span>Confirm & Reserve Pilot</span>`;
+      }
+    });
+
+    function resetBookingForm() {
+      document.getElementById('bookingForm').reset();
+      document.getElementById('successModal').classList.add('hidden');
+      selectPackage('Daily Shift', 25000, 'intra_city');
+    }
+  </script>
+</body>
+</html>
