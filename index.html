@@ -9,15 +9,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Supabase JS Client via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <!-- EmailJS SDK via CDN -->
-  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
-  <script type="text/javascript">
-    (function(){
-      emailjs.init({
-        publicKey: "YOUR_EMAILJS_PUBLIC_KEY" // Replace with your actual EmailJS Public Key when ready
-      });
-    })();
-  </script>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -336,7 +327,7 @@
     <p>© 2026 Steerly Operations Limited. All Rights Reserved.</p>
   </footer>
 
-  <!-- CLEAN JAVASCRIPT & SUPABASE + EMAILJS DISPATCH LOGIC -->
+  <!-- CLEAN JAVASCRIPT & SUPABASE DISPATCH LOGIC -->
   <script>
     const SUPABASE_URL = "https://vfoqbrfqyjhvtrmwsgmr.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_Rbcl-6H6LU7f_vWTWHLlsw_v_GH2BFb";
@@ -446,19 +437,7 @@
 
         if (error) throw error;
 
-        // 2. Trigger Email Alert to steerlyoperations@gmail.com via EmailJS
-        // (Make sure to connect your EmailJS service and template, or leave template params configured)
-        emailjs.send("default_service", "template_default", {
-          to_email: "steerlyoperations@gmail.com",
-          booking_reference: bookingRef,
-          client_name: fullName,
-          phone_number: phone,
-          package: packageSummary,
-          vehicle: `${carModel} (${transmission})`,
-          pickup_details: `${pickupDatetime} at ${pickupAddress}`
-        }).catch(err => console.log("Email dispatch note:", err));
-
-        // 3. Prepare Client Support WhatsApp Link
+        // 2. Prepare Client Support WhatsApp Link
         const supportText = encodeURIComponent(
           `Hello Steerly Operations, I just booked a verified pilot on your website.\n\n` +
           `*Booking Reference:* ${bookingRef}\n` +
@@ -470,11 +449,11 @@
         const waUrl = `https://wa.me/2349030774886?text=${supportText}`;
         document.getElementById('whatsappRedirectBtn').href = waUrl;
         
-        // 4. Update Success Modal with Professional Thank You UI
+        // 3. Update Success Modal with Professional Thank You UI
         document.getElementById('successModalTitle').innerText = "Booking Confirmed!";
         document.getElementById('successModalDesc').innerHTML = `
           Thank you for choosing <b>Steerly Operations Limited</b>! Your reservation reference is <span class="text-cyan-400 font-mono font-bold">${bookingRef}</span>.<br><br>
-          Our dispatch team has received your details and an email confirmation has been sent. For quick inquiries or immediate assistance, tap the button below to chat with our desk on WhatsApp.
+          Our dispatch team has received your details. For quick inquiries or immediate assistance, tap the button below to chat with our desk on WhatsApp.
         `;
 
         document.getElementById('successModal').classList.remove('hidden');
