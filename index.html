@@ -411,7 +411,7 @@
 
       try {
         const { error } = await supabaseClient.from('bookings').insert([{
-          full_name: fullName,
+          customer_name: fullName,
           phone: phone,
           package_type: packageSummary,
           car_make_model: carModel,
