@@ -328,7 +328,7 @@
   </footer>
 
   <!-- CLEAN JAVASCRIPT & SUPABASE DISPATCH LOGIC -->
- <!-- CLEAN JAVASCRIPT & SUPABASE DISPATCH LOGIC -->
+
   <script>
     const SUPABASE_URL = "https://vfoqbrfqyjhvtrmwsgmr.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_Rbcl-6H6LU7f_vWTWHLlsw_v_GH2BFb";
@@ -418,7 +418,7 @@
       }
 
       try {
-        // 1. Save to Supabase 'bookings' table
+        // 1. Save directly to Supabase 'bookings' table
         const { error } = await supabaseClient.from('bookings').insert([{
           booking_reference: bookingRef,
           customer_name: fullName,
@@ -438,23 +438,7 @@
 
         if (error) throw error;
 
-        // 2. Trigger Email Notification via FormSubmit AJAX (Sends directly to your Gmail inbox)
-        await fetch('https://formsubmit.co/ajax/steerlyoperations@gmail.com', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({
-            _subject: `🚨 New Steerly Booking: ${bookingRef} - ${fullName}`,
-            "Booking Reference": bookingRef,
-            "Client Name": fullName,
-            "Phone Number": phone,
-            "Package Tier": packageSummary,
-            "Vehicle": `${carModel} (${transmission})`,
-            "Pickup Address": pickupAddress,
-            "Reporting Date": pickupDatetime
-          })
-        });
-
-        // 3. Configure the WhatsApp Support Dispatch Button URL
+        // 2. Prepare Client Support WhatsApp Link
         const supportText = encodeURIComponent(
           `Hello Steerly Operations, I just booked a verified pilot on your website.\n\n` +
           `*Booking Reference:* ${bookingRef}\n` +
@@ -465,14 +449,13 @@
         );
 
         const waUrl = `https://wa.me/2349030774886?text=${supportText}`;
-        const waBtn = document.getElementById('whatsappRedirectBtn');
-        waBtn.href = waUrl;
+        document.getElementById('whatsappRedirectBtn').href = waUrl;
         
-        // 4. Reveal the Professional Thank You Modal
+        // 3. Reveal the Professional Thank You Modal
         document.getElementById('successModalTitle').innerText = "Booking Confirmed!";
         document.getElementById('successModalDesc').innerHTML = `
           Thank you for choosing <b>Steerly Operations Limited</b>! Your reservation reference is <span class="text-cyan-400 font-mono font-bold">${bookingRef}</span>.<br><br>
-          Our dispatch team has received your details and your email alert has been sent. Tap below to chat with our operations desk on WhatsApp if needed.
+          Our dispatch team has received your details. Tap the button below to chat with our operations desk on WhatsApp and finalize your booking.
         `;
 
         document.getElementById('successModal').classList.remove('hidden');
