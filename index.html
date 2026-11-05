@@ -329,6 +329,32 @@
 
   <!-- RESTORED JAVASCRIPT FOR PACKAGE SELECTION & SUPABASE -->
  <script>
+   <!-- Professional Confirmation Screen -->
+      <div id="successModal" class="hidden absolute inset-0 bg-[#030712]/95 backdrop-blur-xl rounded-2xl md:rounded-3xl p-6 md:p-8 flex flex-col justify-center items-center text-center space-y-4 z-30">
+        <div class="w-14 h-14 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-400 text-2xl font-bold">
+          ✓
+        </div>
+        <h3 id="successModalTitle" class="text-xl md:text-2xl font-extrabold text-white heading-font">Booking Confirmed!</h3>
+        <p id="successModalDesc" class="text-xs md:text-sm text-slate-300 max-w-md leading-relaxed">
+          Thank you for choosing Steerly Operations Limited! Your reservation has been successfully logged.
+        </p>
+        <a id="whatsappRedirectBtn" href="#" target="_blank" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-emerald-500 text-black font-extrabold text-xs md:text-sm hover:bg-emerald-400 transition flex items-center justify-center gap-2">
+          <span>💬 Chat with Support on WhatsApp</span>
+        </a>
+        <button onclick="resetBookingForm()" class="text-xs text-slate-400 underline hover:text-white pt-2">
+          Book Another Pilot
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-white/10 mt-12 py-8 px-4 text-center text-xs text-slate-500">
+    <p>© 2026 Steerly Operations Limited. All Rights Reserved.</p>
+  </footer>
+
+  <!-- FULL JAVASCRIPT & SUPABASE DISPATCH LOGIC -->
+  <script>
     const SUPABASE_URL = "https://vfoqbrfqyjhvtrmwsgmr.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_Rbcl-6H6LU7f_vWTWHLlsw_v_GH2BFb";
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -343,7 +369,6 @@
       baseRate = rate;
       currentCategory = category;
 
-      // Update active card styling
       document.querySelectorAll('.package-card').forEach(card => {
         card.classList.remove('active');
       });
@@ -360,7 +385,6 @@
         document.getElementById(activeId).classList.add('active');
       }
 
-      // Show or hide interstate fields
       const interstateBox = document.getElementById('interstateFields');
       const destInput = document.getElementById('destinationCity');
       if (category === 'interstate') {
@@ -392,7 +416,7 @@
 
       const submitBtn = document.getElementById('submitBtn');
       submitBtn.disabled = true;
-      submitBtn.innerHTML = `<span>Processing Dispatch...</span>`;
+      submitBtn.innerHTML = `<span>Processing Reservation...</span>`;
 
       const fullName = document.getElementById('customerName').value.trim();
       const phone = document.getElementById('customerPhone').value.trim();
@@ -401,10 +425,8 @@
       const pickupDatetime = document.getElementById('pickupDatetime').value;
       const pickupAddress = document.getElementById('pickupAddress').value.trim();
 
-      // Generate a unique booking reference like STR-4169
       const bookingRef = 'STR-' + Math.floor(1000 + Math.random() * 9000);
 
-      // Collect interstate details if applicable
       let destCity = null;
       let isRoundTrip = false;
       let overnightDays = 0;
@@ -415,12 +437,18 @@
         overnightDays = parseInt(document.getElementById('tripDays').value) || 1;
       }
 
+      let packageSummary = `${currentPackage} (₦${totalAmount.toLocaleString()})`;
+      if (currentCategory === 'interstate') {
+        packageSummary = `${currentPackage} - ${overnightDays} Day(s) to ${destCity} (₦${totalAmount.toLocaleString()})`;
+      }
+
       try {
+        // 1. Save to Supabase 'bookings' table
         const { error } = await supabaseClient.from('bookings').insert([{
           booking_reference: bookingRef,
           customer_name: fullName,
           customer_phone: phone,
-          package_tier: currentPackage,  // <-- Matches your Supabase table schema
+          package_tier: currentPackage,
           trip_scope: currentCategory,
           destination_city: destCity,
           is_round_trip: isRoundTrip,
@@ -435,26 +463,41 @@
 
         if (error) throw error;
 
-        // Build WhatsApp notification string
-        let packageSummary = `${currentPackage} (₦${totalAmount.toLocaleString()})`;
-        if (currentCategory === 'interstate') {
-          packageSummary = `${currentPackage} - ${overnightDays} Day(s) to ${destCity} (₦${totalAmount.toLocaleString()})`;
-        }
+        // 2. Automated Email Alert to steerlyoperations@gmail.com
+        fetch(`https://formsubmit.co/ajax/steerlyoperations@gmail.com`, {
+          method: "POST",
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            _subject: `🚨 New Steerly Booking: ${bookingRef} - ${fullName}`,
+            booking_reference: bookingRef,
+            client_name: fullName,
+            phone_number: phone,
+            package: packageSummary,
+            vehicle: `${carModel} (${transmission})`,
+            pickup_details: `${pickupDatetime} at ${pickupAddress}`
+          })
+        }).catch(err => console.log("Email dispatch note:", err));
 
-        const waText = encodeURIComponent(
-          `🚗 *New Steerly Pilot Reservation* (${bookingRef})\n\n` +
-          `*Client:* ${fullName}\n` +
-          `*Phone:* ${phone}\n` +
-          `*Package:* ${packageSummary}\n` +
-          `*Car:* ${carModel} (${transmission})\n` +
-          `*Pickup:* ${pickupDatetime}\n` +
-          `*Address:* ${pickupAddress}`
+        // 3. Prepare Client Support WhatsApp Link
+        const supportText = encodeURIComponent(
+          `Hello Steerly Operations, I just booked a verified pilot on your website.\n\n` +
+          `*Booking Reference:* ${bookingRef}\n` +
+          `*Name:* ${fullName}\n` +
+          `*Package:* ${packageSummary}\n\n` +
+          `Please I would like to confirm my reservation details.`
         );
 
-        const waUrl = `https://wa.me/2349030774886?text=${waText}`;
+        const waUrl = `https://wa.me/2349030774886?text=${supportText}`;
         document.getElementById('whatsappRedirectBtn').href = waUrl;
+        
+        // 4. Update Success Modal with Professional Thank You UI
+        document.getElementById('successModalTitle').innerText = "Booking Confirmed!";
+        document.getElementById('successModalDesc').innerHTML = `
+          Thank you for choosing <b>Steerly Operations Limited</b>! Your reservation reference is <span class="text-cyan-400 font-mono font-bold">${bookingRef}</span>.<br><br>
+          Our dispatch team has received your details and an email confirmation has been sent. For quick inquiries or immediate assistance, tap the button below to chat with our desk on WhatsApp.
+        `;
+
         document.getElementById('successModal').classList.remove('hidden');
-        window.open(waUrl, '_blank');
 
       } catch (err) {
         alert("Booking Error: " + err.message);
