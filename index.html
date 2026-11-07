@@ -60,7 +60,7 @@
 </head>
 <body class="min-h-screen bg-[#030712] selection:bg-cyan-500 selection:text-black pb-24 md:pb-12">
 
-  <!-- NAVIGATION (Linked to drivers.html) -->
+  <!-- NAVIGATION -->
   <nav class="sticky top-0 z-40 glass-card border-b border-white/5 py-3 px-4 md:px-12 flex justify-between items-center">
     <div class="flex items-center gap-2.5">
       <img src="logo.png.png" alt="Steerly Logo" class="w-8 h-8 md:w-10 md:h-10 object-contain drop-shadow-[0_0_10px_rgba(0,210,255,0.4)]" onerror="this.onerror=null; this.src='logo.png';">
@@ -225,7 +225,7 @@
           </div>
         </div>
 
-        <!-- Interstate Details -->
+        <!-- Interstate Details (destinationCity & tripDays are required conditionally via JS or directly when visible) -->
         <div id="interstateFields" class="hidden space-y-3.5 p-4 rounded-2xl bg-blue-950/30 border border-cyan-500/20">
           <div>
             <label class="block text-[11px] uppercase tracking-wider text-cyan-300 font-bold mb-1">Destination City & State *</label>
@@ -234,14 +234,14 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label class="block text-[11px] text-slate-300 mb-1">Trip Format</label>
-              <select id="roundTripSelect" class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+              <select id="roundTripSelect" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
                 <option value="true">Round Trip (Driver stays with vehicle)</option>
                 <option value="false">One-Way (Driver returns independently)</option>
               </select>
             </div>
             <div>
-              <label class="block text-[11px] text-slate-300 mb-1">Number of Days</label>
-              <input type="number" id="tripDays" value="1" min="1" max="30" class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm" oninput="updateInterstateDays()">
+              <label class="block text-[11px] text-slate-300 mb-1">Number of Days *</label>
+              <input type="number" id="tripDays" value="1" min="1" max="30" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm" oninput="updateInterstateDays()">
             </div>
           </div>
           <p class="text-[10px] text-slate-400 italic">
@@ -249,7 +249,7 @@
           </p>
         </div>
 
-        <!-- Vehicle Details -->
+        <!-- Vehicle Details (All required) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Car Make & Model *</label>
@@ -257,7 +257,8 @@
           </div>
           <div>
             <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Transmission *</label>
-            <select id="transmission" class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+            <select id="transmission" required class="w-full glass-input rounded-xl px-3.5 py-3 text-white text-xs md:text-sm">
+              <option value="" disabled selected>Select transmission</option>
               <option value="automatic">Automatic Transmission</option>
               <option value="manual">Manual Transmission</option>
               <option value="both">Comfortable with Both</option>
@@ -265,7 +266,7 @@
           </div>
         </div>
 
-        <!-- Schedule & Pickup -->
+        <!-- Schedule & Pickup (All required) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Reporting Date & Time *</label>
@@ -277,7 +278,7 @@
           </div>
         </div>
 
-        <!-- Client Contact -->
+        <!-- Client Contact (All required) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
           <div>
             <label class="block text-[11px] uppercase tracking-wider text-slate-300 font-bold mb-1">Your Full Name *</label>
@@ -328,8 +329,6 @@
   </footer>
 
   <!-- CLEAN JAVASCRIPT & SUPABASE DISPATCH LOGIC -->
-
-  <!-- CLEAN JAVASCRIPT & SUPABASE DISPATCH LOGIC -->
   <script>
     const SUPABASE_URL = "https://vfoqbrfqyjhvtrmwsgmr.supabase.co";
     const SUPABASE_ANON_KEY = "sb_publishable_Rbcl-6H6LU7f_vWTWHLlsw_v_GH2BFb";
@@ -363,13 +362,18 @@
 
       const interstateBox = document.getElementById('interstateFields');
       const destInput = document.getElementById('destinationCity');
+      const tripDaysInput = document.getElementById('tripDays');
+      
       if (category === 'interstate') {
         interstateBox.classList.remove('hidden');
         destInput.required = true;
+        tripDaysInput.required = true;
         updateInterstateDays();
       } else {
         interstateBox.classList.add('hidden');
         destInput.required = false;
+        tripDaysInput.required = false;
+        destInput.value = ''; // clear value when hidden so it doesn't block validation if switched back
         totalAmount = baseRate;
         document.getElementById('selectedPackageLabel').innerText = `${pkgName} (City Shift)`;
         document.getElementById('displayTotal').innerText = `₦${totalAmount.toLocaleString()}`;
@@ -470,7 +474,7 @@
 
         if (successModal) {
           successModal.classList.remove('hidden');
-          successModal.style.display = 'flex'; // Force display flex
+          successModal.style.display = 'flex';
         }
 
       } catch (err) {
